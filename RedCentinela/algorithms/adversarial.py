@@ -40,8 +40,63 @@ class MinimaxAgent(MultiAgentSearchAgent):
         - Reinicie las métricas y cuente una vez cada estado procesado, incluida
           la raíz. Retorne la acción de MAX y conserve la primera en los empates.
         """
-        # TODO: Add your code here
-        raise NotImplementedError("Punto 4: implemente MinimaxAgent.get_action")
+        self.nodes_evaluated = 0
+
+        def minValue(state, plies):
+          self.nodes_evaluated +=1
+
+          #Revisar si un estado es terminal o si se alcanza el limite de profundidad
+          if state.is_win() or state.is_lose() or plies == 0: 
+            return evaluation_function(state), None
+    
+          #Inicializa el valor minimo como infinito porque estamos buscando valores mas pequeños
+          min_value = float('inf')
+          best_action = None
+
+          #Como estamos en un nodo min, sabemos que el agente es el intruso, entonces agent_index = 1
+          actions = state.get_legal_actions(1)
+          for action in actions: 
+            #Generamos los sucesores del estado actual dada una acción
+            successor = state.generate_successor(1, action)
+            #Calculamos el valor del siguiente nodo y reducimos los plies
+            current_value = maxValue(successor, plies-1)[0]
+
+            #Si el valor del sucesor es estrictamente menor que el actual entonces actualizamos
+            if current_value < min_value: 
+                min_value = current_value
+                best_action = action
+          return min_value, best_action
+
+        def maxValue(state, plies):
+          self.nodes_evaluated +=1
+          
+          #Revisar si un estado es terminal o si se alcanza el limite de profundidad
+          if state.is_win() or state.is_lose() or plies == 0: 
+            return evaluation_function(state), None
+    
+          #Inicializa el valor maximo como menos infinito porque estamos buscando valores mas pequeños
+          max_value = float('-inf')
+          best_action = None
+
+          #Como estamos en un nodo max, sabemos que el agente es el defensor, entonces agent_index = 0
+          actions = state.get_legal_actions(0)
+          for action in actions: 
+            #Generamos los sucesores del estado actual dada una acción
+            successor = state.generate_successor(0, action)
+            #Calculamos el valor del siguiente nodo y reducimos los plies
+            current_value = minValue(successor, plies-1)[0]
+
+            #Si el valor del sucesor es estrictamente mayor que el actual entonces actualizamos
+            if current_value > max_value: 
+                max_value = current_value
+                best_action = action
+          return max_value, best_action
+        
+
+        #Empezamos en un nodo max (turno del defensor)
+        action = maxValue(state, self.depth)[1]
+        return action
+        #raise NotImplementedError("Punto 4: implemente MinimaxAgent.get_action")
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
