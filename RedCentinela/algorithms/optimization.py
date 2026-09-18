@@ -38,6 +38,7 @@ def hill_climbing(
     - Inicialice los historiales con la configuración inicial y agregue solo las
       mejoras aceptadas antes de retornar el OptimizationResult.
     """
+    
     current = tuple(initial_configuration)
     current_score = configuration_score(problem, current)
     
@@ -186,6 +187,12 @@ def one_point_crossover(
         return parent1, parent2
 
     # TODO: Add your code here
+
+    cut = rng.randint(1, len(parent1) - 1)
+    child1 = parent1[:cut] + parent2[cut:]
+    child2 = parent2[:cut] + parent1[cut:]
+    return child1, child2
+
     raise NotImplementedError("Punto 3: implemente one_point_crossover")
 
 
@@ -206,6 +213,21 @@ def swap_mutation(
     - Retorne una tupla nueva; no modifique el individuo recibido.
     """
     # TODO: Add your code here
+
+    if rng.random() >= mutation_probability:
+        return tuple(individual)
+
+    active = [index for index, bit in enumerate(individual) if bit]
+    inactive = [index for index, bit in enumerate(individual) if not bit]
+
+    if not active or not inactive:
+        return tuple(individual)
+
+    mutated = list(individual)
+    mutated[rng.choice(active)] = 0
+    mutated[rng.choice(inactive)] = 1
+    return tuple(mutated)
+
     raise NotImplementedError("Punto 3: implemente swap_mutation")
 
 
@@ -243,4 +265,51 @@ def genetic_algorithm(
         raise ValueError("elite_size debe estar entre 0 y population_size")
 
     # TODO: Add your code here
+    
+    population = problem.initial_population(population_size, rng)
+    scores = [configuration_score(problem, individual) for individual in population]
+    evaluations = len(population)
+
+    best_score = max(scores)
+    best_configuration = population[scores.index(best_score)]
+    history = [best_configuration]
+    score_history = [best_score]
+
+    for _ in range(generations):
+        ranked = sorted(zip(scores, population), key=lambda pair: pair[0], reverse = True)
+        new_population = [config for _, config in ranked[:elite_size]]
+
+        while len(new_population) < population_size:
+            parent1 = problem.tournament_select(population, scores, rng)
+            parent2 = problem.tournament_select(population, scores, rng)
+            child1, child2 = one_point_crossover(parent1, parent2, rng)
+            for child in (child1, child2):
+                if len(new_population) >= population_size:
+                    break
+                repaired = problem.repair_configuration(child, rng)
+                new_population.append(swap_mutation(repaired, mutation_probability, rng))
+
+        population = new_population
+        scores = [configuration_score(problem, individual) for individual in population]
+        evaluations += len(population)
+
+        if max(scores) > best_score:
+            best_score = max(scores)
+            best_configuration = population[scores.index(best_score)]
+
+        history.append(best_configuration)
+        score_history.append(best_score)
+
+    return OptimizationResult(
+        best_configuration=best_configuration,
+        best_score=best_score,
+        evaluations=evaluations,
+        iterations=generations,
+        history=history,
+        score_history=score_history,
+        metadata={
+            "mutation_probability": mutation_probability,
+            "elite_size":elite_size,
+        },
+    )
     raise NotImplementedError("Punto 3: implemente genetic_algorithm")
