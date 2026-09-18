@@ -37,6 +37,36 @@ def evaluation_function(state: GameState) -> float:
     """
     if state.is_win() or state.is_lose():
         return base_evaluation_function(state)
+    else:
+        score = state.get_score()
+        distancia_a_objetivo = float("inf")
+        distancia_a_intruso = state.layout.distance(
+        state.defender_position,
+        state.intruder_position)
+
+        for terminal in state.pending_terminals:
+          distancia = state.layout.distance(
+            state.defender_position,
+            terminal
+        )
+
+          if distancia < distancia_a_objetivo:
+            distancia_a_objetivo = distancia
+
+        valor = score
+
+        if distancia_a_objetivo != float("inf"):
+          valor += 10 / (distancia_a_objetivo + 1)
+
+        if distancia_a_intruso != float("inf"):
+          valor -= 10 / (distancia_a_intruso + 1)
+
+        acciones = state.get_legal_actions(0)
+        valor += len(acciones)
+
+        return max(-999, min(999, valor))
+
 
     # TODO: Add your code here
     return base_evaluation_function(state)
+

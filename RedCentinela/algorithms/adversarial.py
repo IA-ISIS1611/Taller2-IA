@@ -61,5 +61,81 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         - En MAX actualice alpha y corte si valor >= beta; en MIN actualice beta
           y corte si valor <= alpha.
         """
+        alpha = float("-inf")
+        beta = float("inf")
+
+        best_value = float("-inf")
+        best_action = None
+
+        for action in state.get_legal_actions(0):
+            successor = state.generate_successor(0, action)
+
+            value = self.min_value(
+                successor, 0, 1, alpha, beta
+            )
+
+            if value > best_value:
+                best_value = value
+                best_action = action
+
+            alpha = max(alpha, best_value)
+
+        return best_action
+
+    def max_value(self, state, depth, alpha, beta):
+
+        if depth == self.depth or state.is_win() or state.is_lose():
+            return evaluation_function(state)
+
+        value = float("-inf")
+
+        for action in state.get_legal_actions(0):
+            successor = state.generate_successor(0, action)
+
+            value = max(
+                value,
+                self.min_value(
+                    successor, depth, 1, alpha, beta
+                )
+            )
+
+            alpha = max(alpha, value)
+
+            if value >= beta:
+                break
+
+        return value
+
+    def min_value(self, state, depth, agent, alpha, beta):
+
+        if depth == self.depth or state.is_win() or state.is_lose():
+            return evaluation_function(state)
+
+        value = float("inf")
+
+        for action in state.get_legal_actions(agent):
+            successor = state.generate_successor(agent, action)
+
+            if agent == state.get_num_agents() - 1:
+                value = min(
+                    value,
+                    self.max_value(
+                        successor, depth + 1, alpha, beta
+                    )
+                )
+            else:
+                value = min(
+                    value,
+                    self.min_value(
+                        successor, depth, agent + 1, alpha, beta
+                    )
+                )
+
+            beta = min(beta, value)
+
+            if value <= alpha:
+                break
+
+        return value
         # TODO: Add your code here
         raise NotImplementedError("Punto 5: implemente AlphaBetaAgent.get_action")
