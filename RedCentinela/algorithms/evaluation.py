@@ -59,10 +59,14 @@ def evaluation_function(state: GameState) -> float:
           valor += 10 / (distancia_a_objetivo + 1)
 
         if distancia_a_intruso != float("inf"):
-          valor -= 10 / (distancia_a_intruso + 1)
+          valor += 10 / (distancia_a_intruso + 1)
 
         acciones = state.get_legal_actions(0)
-        valor += len(acciones)
+
+        acciones_sin_stop = [action for action in acciones if action != "Stop"]
+        valor += len(acciones_sin_stop)
+        if len(acciones_sin_stop) == 0:
+          valor -= 900
 
         return max(-999, min(999, valor))
 
