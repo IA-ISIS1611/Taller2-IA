@@ -116,6 +116,86 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         - En MAX actualice alpha y corte si valor >= beta; en MIN actualice beta
           y corte si valor <= alpha.
         """
+
+        self.nodes_evaluated = 0
+
+        def minValue(state, plies, alpha, beta):
+            self.nodes_evaluated += 1
+
+            if state.is_win() or state.is_lose() or plies == 0:
+                return evaluation_function(state), None
+
+            min_value = float('inf')
+            best_action = None
+
+            actions = state.get_legal_actions(1)
+
+            for action in actions:
+                successor = state.generate_successor(1, action)
+                current_value = maxValue(
+                    successor,
+                    plies - 1,
+                    alpha,
+                    beta
+                )[0]
+
+                if current_value < min_value:
+                    min_value = current_value
+                    best_action = action
+
+                if min_value <= alpha:
+                    break
+
+                beta = min(beta, min_value)
+
+            return min_value, best_action
+
+
+        def maxValue(state, plies, alpha, beta):
+            self.nodes_evaluated += 1
+
+            if state.is_win() or state.is_lose() or plies == 0:
+                return evaluation_function(state), None
+
+            max_value = float('-inf')
+            best_action = None
+
+            actions = state.get_legal_actions(0)
+
+            for action in actions:
+                successor = state.generate_successor(0, action)
+                current_value = minValue(
+                    successor,
+                    plies - 1,
+                    alpha,
+                    beta
+                )[0]
+
+                if current_value > max_value:
+                    max_value = current_value
+                    best_action = action
+
+                if max_value >= beta:
+                    break
+
+                alpha = max(alpha, max_value)
+
+            return max_value, best_action
+
+
+        alpha = float('-inf')
+        beta = float('inf')
+
+        action = maxValue(state, self.depth, alpha, beta)[1]
+
+        return action
+
+"""
+class AlphaBetaAgent(MultiAgentSearchAgent):
+    #Agente Minimax que evita explorar ramas mediante poda alfa-beta.
+
+    def get_action(self, state: GameState) -> str | None:
+        
         alpha = float("-inf")
         beta = float("inf")
 
@@ -194,3 +274,5 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return value
         # TODO: Add your code here
         raise NotImplementedError("Punto 5: implemente AlphaBetaAgent.get_action")
+"""
+
